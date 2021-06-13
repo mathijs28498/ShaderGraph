@@ -251,7 +251,7 @@ void ShaderGraph::draw() {
 	}
 
 	ImGui::Begin("ShaderGraph", (bool*)0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-	ImGui::SetWindowSize({ 0, HEIGHT / 2 - 50 });
+	ImGui::SetWindowSize({ 150, HEIGHT / 2 - 50 });
 	ImGui::SetWindowPos({ 0, 0 });
 	if (ImGui::Button("GENERATE")) {
 		//TODO: Make logic to generate code
