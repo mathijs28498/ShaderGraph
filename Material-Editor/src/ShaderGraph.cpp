@@ -55,7 +55,8 @@ void ImSpecialNode::draw() {
 		ImGui::SameLine(); ImGui::Text(output.type.name.c_str());
 		ImGui::SameLine();
 		if (ImGui::ArrowButton(output.value.c_str(), ImGuiDir_Right)) {
-			graph->addConnection(ImGui::GetMousePos(), { name, output });
+			if (graph->selectedConnection == nullptr)
+				graph->addConnection(ImGui::GetMousePos(), { name, output });
 		}
 		ImGui::NewLine();
 	}
@@ -113,8 +114,9 @@ void ImGraphNode::draw() {
 	ImGui::SameLine(START_WINDOW_WIDTH - nextItemWidth); ImGui::Text((node.func->outputType.name).c_str());
 	ImGui::SameLine();
 	if (ImGui::ArrowButton("output", ImGuiDir_Right)) {
-		graph->addConnection(ImGui::GetMousePos(), { name, node.func->outputType, 
-			node.func->outputType.prefix != Undefined ? node.outputName : node.func->name });
+		if (graph->selectedConnection == nullptr)
+			graph->addConnection(ImGui::GetMousePos(), { name, node.func->outputType, 
+				node.func->outputType.prefix != Undefined ? node.outputName : node.func->name });
 	}
 
 	for (int i = 0; i < node.func->defaultInputParams.size(); i++) {

@@ -108,6 +108,15 @@ float multFloat(float a, float b) {\n\
 	{{"float", None, "0"}, {"float", None, "0"}},
 	{"float", None}
 };
+ShaderFunction multVec4{
+	"multVec4",
+	{},
+	"vec4 multVec4(vec4 a, vec4 b) {return a * b;}; \n",
+	"",
+	{{"vec4", None, "0"}, {"vec4", None, "0"}},
+	{"vec4", None}
+};
+
 ShaderFunction multVec2Float{
 	"multVec2Float",
 	{},
@@ -253,7 +262,9 @@ map<string, ShaderFunction*> shaderFunctions{
 	{multVec2Float.name, &multVec2Float},
 	{addVec2.name, &addVec2},
 	{addVec3.name, &addVec3},
+	{addVec4.name, &addVec4},
 	{multFloat.name, &multFloat},
+	{multVec4.name, &multVec4},
 	{minFloat.name, &minFloat},
 	{addFloat.name, &addFloat},
 	{sinShad.name, &sinShad},
