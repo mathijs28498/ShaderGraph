@@ -6,6 +6,9 @@
 #include <glm/gtx/norm.hpp>
 
 #include <iostream>
+#include <queue>
+#include <stack>
+#include <unordered_set>
 
 constexpr float FLOAT_INPUT_WIDTH = 50;
 constexpr float START_WINDOW_WIDTH = 210;
@@ -33,7 +36,7 @@ void ImSpecialNode::onInputButton(FuncParameter param, int i) {
 			graph->removeConnectionWithEndNode(this, i);
 
 		con->setEndNode({ name, param });
-		inputNames[i] = con->getBeginNode()->name;
+		inputNames[i] = con->getBeginNode()->param.value;
 		graph->selectedConnection = nullptr;
 		graph->selectedConnectionPress = false;
 	} else if (con == nullptr) {
@@ -88,7 +91,7 @@ void ImGraphNode::onInputButton(FuncParameter param, int i) {
 			graph->removeConnectionWithEndNode(this, i);
 
 		con->setEndNode({ name, param });
-		node.inputNames[i] = con->getBeginNode()->name;
+		node.inputNames[i] = con->getBeginNode()->param.value;
 		graph->selectedConnection = nullptr;
 		graph->selectedConnectionPress = false;
 	} else if (con == nullptr) {
@@ -339,6 +342,12 @@ void ShaderGraph::addConnection(ImVec2 startPos, ConnectionPoint begin) {
 	selectedConnection = connections.back();
 }
 
+GraphNode* ShaderGraph::getGraphNode(std::string name) {
+	auto result = std::find_if(nodes.begin(), nodes.end(), [name](ImGraphNode* obj) { return obj->node.outputName == name; });
+	if (result == nodes.end()) return nullptr;
+	return &(*result)->node;
+}
+
 void ShaderGraph::generateShader() {
 	std::vector<GraphNode> vertexNodes{
 		{"multMat4Vec3", "A", None},
@@ -348,14 +357,47 @@ void ShaderGraph::generateShader() {
 		vertexNodes[0].inputNames[1] = "vPosition";
 	}
 
-	std::vector<GraphNode> fragmentNodes{
+	std::stack<GraphNode*> fragmentNodesStack;
+	std::queue<GraphNode*> fragmentNodesQueue;
+	ImSpecialNode* fragNode = specialNodes[2];
+	for (size_t i = 0; i < fragNode->inputNames.size(); i++) {
+		if (fragNode->inputNames[i] == "") continue;
+		GraphNode* initialNode = getGraphNode(fragNode->inputNames[i]);
+		if (initialNode == nullptr) continue;
+		fragmentNodesStack.push(initialNode);
+		fragmentNodesQueue.push(initialNode);
+
+		while (!fragmentNodesQueue.empty()) {
+			GraphNode* curNode = fragmentNodesQueue.front();
+			fragmentNodesQueue.pop();
+			for (size_t j = 0; j < curNode->inputNames.size(); j++) {
+				if (curNode->inputNames[j] == "") continue;
+				GraphNode* nextNode = getGraphNode(curNode->inputNames[j]);
+				if (nextNode == nullptr) continue;
+				fragmentNodesStack.push(nextNode);
+				fragmentNodesQueue.push(nextNode);
+			}
+		}
+	}
+
+	std::unordered_set<std::string> knownNames;
+	std::vector<GraphNode> fragmentNodes;
+	while (!fragmentNodesStack.empty()) {
+		GraphNode* node = fragmentNodesStack.top();
+		if (knownNames.count(node->outputName) == 0) {
+			fragmentNodes.push_back(*fragmentNodesStack.top());
+			knownNames.insert(node->outputName);
+		}
+		fragmentNodesStack.pop();
+	}
+	/*std::vector<GraphNode> fragmentNodes{
 		{"texture0", "B", None},
 		{"texture", "C", None},
-	};
-	{
+	};*/
+	/*{
 		fragmentNodes[1].inputNames[0] = "texture0";
 		fragmentNodes[1].inputNames[1] = "fTexCoord";
-	}
+	}*/
 
 
 
@@ -369,7 +411,7 @@ void ShaderGraph::generateShader() {
 	specialShaderNodes[0].inputNames[1] = "vTexCoord";
 	specialShaderNodes[0].inputNames[2] = "vNormal";
 
-	specialShaderNodes[1].inputNames[0] = "C";
+	/*specialShaderNodes[1].inputNames[0] = "C";*/
 
 	generatedShader = Shader(vertexNodes, fragmentNodes, specialShaderNodes);
 

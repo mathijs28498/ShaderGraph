@@ -28,6 +28,7 @@ public:
 	std::vector<FuncParameter> inputParams;
 	std::vector<FuncParameter> outputParams;
 	std::vector<std::string> inputNames;
+	std::vector<std::string> inputNamesReal;
 };
 
 class ImBeginNode : public ImSpecialNode {
@@ -40,6 +41,7 @@ public:
 			{ "mat4", None, "mvp" } 
 		};
 		inputNames.resize(inputParams.size());
+		inputNamesReal.resize(inputParams.size());
 	}
 };
 
@@ -56,6 +58,7 @@ public:
 			{"vec3", None, "fNormal"}
 		};
 		inputNames.resize(inputParams.size());
+		inputNamesReal.resize(inputParams.size());
 	}
 };
 
@@ -66,6 +69,7 @@ public:
 			{"vec4", None, "FragColor"}
 		};
 		inputNames.resize(inputParams.size());
+		inputNamesReal.resize(inputParams.size());
 	}
 };
 
@@ -171,5 +175,6 @@ private:
 	uint32_t texture = loadTexture("textures/brick_wall.jpg", GL_RGB, true);
 
 	void generateShader();
+	GraphNode* getGraphNode(std::string name);
 };
 

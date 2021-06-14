@@ -27,6 +27,8 @@ int main() {
 		Shader lineShader("src/shaders/line.vert", "src/shaders/line.frag");
 		//Shader generatedShader("src/shaders/generated.vert", "src/shaders/generated.frag");
 
+
+
 		std::vector<GraphNode> vertexNodes{
 			{"vec2", "noiseInputX", None},
 			{"multFloat", "vec2InputY", None},

@@ -77,8 +77,8 @@ Shader::Shader(std::vector<GraphNode> vertexNodes, std::vector<GraphNode> fragme
 	std::string vertexCode = generateVertexCode(vertexNodes, &specialNodes[0]);
 	std::string fragmentCode = generateFragmentCode(fragmentNodes, &specialNodes[1]);
 
-	//std::cout << vertexCode << '\n';
-	//std::cout << fragmentCode << '\n';
+	std::cout << vertexCode << '\n';
+	std::cout << fragmentCode << '\n';
 
 	uint32_t vertex = createShader(vertexCode.c_str(), GL_VERTEX_SHADER);
 	uint32_t fragment = createShader(fragmentCode.c_str(), GL_FRAGMENT_SHADER);

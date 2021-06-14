@@ -298,9 +298,17 @@ void GraphNode::appendNode(string* startOut, string* declarationsOut, string* ma
 	if (func->outputType.prefix != Undefined) {
 		*mainOut += func->outputType.name + " " + getPrefix(outputPrefix, shaderType) + outputName + " = " + func->name + "(";
 		for (size_t i = 0; i < inputNames.size() - 1; i++) {
-			*mainOut += getParam(&inputNames[i], &func->defaultInputParams[i], shaderType) + ", ";
+			if (func->defaultInputParams[i].type.name == "sampler2D") {
+				// TODO: Fix for time and texture0
+				*mainOut += "texture0, ";
+			} else {
+				*mainOut += getParam(&inputNames[i], &func->defaultInputParams[i], shaderType) + ", ";
+			}
+		}if (func->defaultInputParams.back().type.name == "sampler2D") {
+			*mainOut += "texture0);\n";
+		} else {
+			*mainOut += getParam(&inputNames.back(), &func->defaultInputParams.back(), shaderType) + ");\n";
 		}
-		*mainOut += getParam(&inputNames.back(), &func->defaultInputParams.back(), shaderType) + ");\n";
 	}
 }
 
