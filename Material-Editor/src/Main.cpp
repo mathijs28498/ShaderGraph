@@ -44,11 +44,9 @@ int main() {
 			vertexNodes[1].inputNames[1] = "2";
 
 			vertexNodes[2].inputNames[0] = "vec2InputY";
-			vertexNodes[3].inputNames[0] = "vec2(0,0)";
-			vertexNodes[4].inputNames[0] = "vec2(0,0)";
 
-			//vertexNodes[3].inputNames[0] = "noiseInputX";
-			//vertexNodes[4].inputNames[0] = "noiseInputY";
+			vertexNodes[3].inputNames[0] = "noiseInputX";
+			vertexNodes[4].inputNames[0] = "noiseInputY";
 		}
 
 		std::vector<GraphNode> fragmentNodes{

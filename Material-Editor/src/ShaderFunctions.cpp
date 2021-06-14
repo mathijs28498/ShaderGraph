@@ -23,7 +23,7 @@ ShaderFunction vec3{
 ShaderFunction vec3x{
 	"vec3x",
 	{},
-	"float vec3x(vec3 vec) {return vec3.x}\n",
+	"float vec3x(vec3 vec) {return vec.x;};\n",
 	"",
 	{ {"vec3", None, "vec3(0)"} },
 	{"float", None }
@@ -31,7 +31,7 @@ ShaderFunction vec3x{
 ShaderFunction vec3y{
 	"vec3y",
 	{},
-	"float vec3x(vec3 vec) {return vec3.y}\n",
+	"float vec3y(vec3 vec) {return vec.y;};\n",
 	"",
 	{ {"vec3", None, "vec3(0)"} },
 	{"float", None }
@@ -39,7 +39,7 @@ ShaderFunction vec3y{
 ShaderFunction vec3z{
 	"vec3z",
 	{},
-	"float vec3z(vec3 vec) {return vec3.z}\n",
+	"float vec3z(vec3 vec) {return vec.z;};\n",
 	"",
 	{ {"vec3", None, "vec3(0)"} },
 	{"float", None }
@@ -68,6 +68,32 @@ ShaderFunction multMat4Vec3{
 	"vec4 multMat4Vec3(mat4 mat, vec3 vec) {return mat * vec4(vec.xyz, 1);};\n",
 	"",
 	{{"mat4", None, "Mat4(0)"}, {"vec3", None, "vec4(0)"}},
+	{"vec4", None}
+};
+
+ShaderFunction minFloat{
+	"minFloat",
+	{},
+	"float minFloat(float a, float b) {return a - b;};\n",
+	"",
+	{{"float", None, "0"}, {"float", None, "0"}},
+	{"float", None}
+};
+ShaderFunction addFloat{
+	"addFloat",
+	{},
+	"float addFloat(float a, float b) {return a + b;};\n",
+	"",
+	{{"float", None, "0"}, {"float", None, "0"}},
+	{"float", None}
+};
+
+ShaderFunction addVec4{
+	"addVec4",
+	{},
+	"vec4 addVec4(vec4 a, vec4 b) {return a + b;};\n",
+	"",
+	{{"vec4", None, "0"}, {"vec4", None, "0"}},
 	{"vec4", None}
 };
 
@@ -228,6 +254,8 @@ map<string, ShaderFunction*> shaderFunctions{
 	{addVec2.name, &addVec2},
 	{addVec3.name, &addVec3},
 	{multFloat.name, &multFloat},
+	{minFloat.name, &minFloat},
+	{addFloat.name, &addFloat},
 	{sinShad.name, &sinShad},
 	{cosShad.name, &cosShad},
 	{multMat4Vec4.name, &multMat4Vec4},
@@ -298,17 +326,18 @@ void GraphNode::appendNode(string* startOut, string* declarationsOut, string* ma
 	if (func->outputType.prefix != Undefined) {
 		*mainOut += func->outputType.name + " " + getPrefix(outputPrefix, shaderType) + outputName + " = " + func->name + "(";
 		for (size_t i = 0; i < inputNames.size() - 1; i++) {
-			if (func->defaultInputParams[i].type.name == "sampler2D") {
-				// TODO: Fix for time and texture0
-				*mainOut += "texture0, ";
-			} else {
+			//if (func->defaultInputParams[i].type.name == "sampler2D") {
+			//	// TODO: Fix for time and texture0
+			//	*mainOut += "texture0, ";
+			//} else {
 				*mainOut += getParam(&inputNames[i], &func->defaultInputParams[i], shaderType) + ", ";
-			}
-		}if (func->defaultInputParams.back().type.name == "sampler2D") {
-			*mainOut += "texture0);\n";
-		} else {
-			*mainOut += getParam(&inputNames.back(), &func->defaultInputParams.back(), shaderType) + ");\n";
+			//}
 		}
+		/*if (func->defaultInputParams.back().type.name == "sampler2D") {
+			*mainOut += "texture0);\n";
+		*///} else {
+			*mainOut += getParam(&inputNames.back(), &func->defaultInputParams.back(), shaderType) + ");\n";
+		//}
 	}
 }
 

@@ -175,6 +175,7 @@ private:
 	uint32_t texture = loadTexture("textures/brick_wall.jpg", GL_RGB, true);
 
 	void generateShader();
-	GraphNode* getGraphNode(std::string name);
+	ImGraphNode* getImGraphNode(std::string name);
+	std::vector<GraphNode> getGraphNodes(const ImSpecialNode* specialNode);
 };
 
