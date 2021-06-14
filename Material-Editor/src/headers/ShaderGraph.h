@@ -20,6 +20,7 @@ public:
 		ImGui::End();
 	}
 
+	void onInputButton(FuncParameter param, int i);
 	void draw();
 
 	ShaderGraph* graph;
@@ -79,10 +80,15 @@ private:
 	void onInputButton(FuncParameter param, int i);
 };
 
+struct ConnectionPoint {
+	std::string name;
+	FuncParameter param;
+};
+
 class ShaderConnection {
 public:
-	ShaderConnection(Shader* shader, std::vector<float> positions, ImGraphNode* beginNode) :
-		shader(shader), positions(positions), endNode(nullptr) {
+	ShaderConnection(Shader* shader, std::vector<float> positions, ConnectionPoint beginNode) :
+		shader(shader), positions(positions), endNode({"", ""}) {
 		setBeginNode(beginNode);
 		createVAO();
 	};
@@ -92,25 +98,25 @@ public:
 	void updateSecondCoord(glm::vec2 delta);
 	void draw();
 
-	ImGraphNode* getBeginNode() {
-		return beginNode;
+	ConnectionPoint* getBeginNode() {
+		return &beginNode;
 	}
-	ImGraphNode* getEndNode() {
-		return endNode;
+	ConnectionPoint* getEndNode() {
+		return &endNode;
 	}
 
-	void setBeginNode(ImGraphNode* beginNode) {
+	void setBeginNode(ConnectionPoint beginNode) {
 		this->beginNode = beginNode;
 
-		ImGui::Begin(beginNode->name.c_str());
+		ImGui::Begin(beginNode.name.c_str());
 		oldWindowPosBegin = { ImGui::GetWindowPos().x, ImGui::GetWindowPos().y };
 		ImGui::End();
 	}
 
-	void setEndNode(ImGraphNode* endNode) {
+	void setEndNode(ConnectionPoint endNode) {
 		this->endNode = endNode;
 
-		ImGui::Begin(endNode->name.c_str());
+		ImGui::Begin(endNode.name.c_str());
 		oldWindowPosEnd = { ImGui::GetWindowPos().x, ImGui::GetWindowPos().y };
 		ImGui::End();
 	}
@@ -121,8 +127,8 @@ private:
 	std::vector<float> positions;
 	glm::vec2 oldWindowPosBegin;
 	glm::vec2 oldWindowPosEnd;
-	ImGraphNode* beginNode;
-	ImGraphNode* endNode;
+	ConnectionPoint beginNode;
+	ConnectionPoint endNode;
 
 	void createVAO();
 	void updateVAO();
@@ -138,7 +144,7 @@ public:
 	void removeConnectionWithBeginNode(ImGraphNode* node);
 	void removeConnectionWithEndNode(ImGraphNode* node, int i = -1);
 	void addNode(GraphNode node);
-	void addConnection(ImVec2 startPos, ImGraphNode* beginNode);
+	void addConnection(ImVec2 startPos, ConnectionPoint beginNode);
 	void draw();
 
 private:

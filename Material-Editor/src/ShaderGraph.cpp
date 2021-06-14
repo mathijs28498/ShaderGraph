@@ -24,6 +24,23 @@ std::string getUniqueName() {
 	return name;
 }
 
+void ImSpecialNode::onInputButton(FuncParameter param, int i) {
+	ShaderConnection* con = graph->selectedConnection;
+	// TODO ERROR: Fix this
+	if (con != nullptr && con->getBeginNode()->param.type.name == param.type.name) {
+		/*if (node.inputNames[i] != "")
+			graph->removeConnectionWithEndNode(this, i);
+
+		con->setEndNode({ name, param });
+		node.inputNames[i] = con->getBeginNode()->name;
+		graph->selectedConnection = nullptr;
+		graph->selectedConnectionPress = false;*/
+	} else if (con == nullptr) {
+		/*graph->removeConnectionWithEndNode(this, i);
+		node.inputNames[i] = "";*/
+	}
+}
+
 void ImSpecialNode::draw() {
 	ImGui::StyleColorsClassic();
 	ImGui::Begin(name.c_str(), (bool*) 0, ImGuiWindowFlags_NoCollapse);
@@ -34,7 +51,7 @@ void ImSpecialNode::draw() {
 		ImGui::SameLine(); ImGui::Text(output.type.name.c_str());
 		ImGui::SameLine(); 
 		if (ImGui::ArrowButton(output.value.c_str(), ImGuiDir_Right)) {
-			//graph->addConnection(ImGui::GetMousePos(), output);
+			graph->addConnection(ImGui::GetMousePos(), { name, output });
 		}
 		ImGui::NewLine();
 	}
@@ -63,11 +80,12 @@ ImGraphNode::ImGraphNode(ShaderGraph* graph, GraphNode node) : graph(graph), nod
 
 void ImGraphNode::onInputButton(FuncParameter param, int i) {
 	ShaderConnection* con = graph->selectedConnection;
-	if (con != nullptr && con->getBeginNode()->node.func->outputType.name == param.type.name) {
+	// TODO ERROR: Fix this
+	if (con != nullptr && con->getBeginNode()->param.type.name == param.type.name) {
 		if (node.inputNames[i] != "")
 			graph->removeConnectionWithEndNode(this, i);
 
-		con->setEndNode(this);
+		con->setEndNode({ name, param });
 		node.inputNames[i] = con->getBeginNode()->name;
 		graph->selectedConnection = nullptr;
 		graph->selectedConnectionPress = false;
@@ -91,7 +109,7 @@ void ImGraphNode::draw() {
 	ImGui::SameLine();
 	if (ImGui::ArrowButton("output", ImGuiDir_Right)) {
 		// TODO: Change this
-		graph->addConnection(ImGui::GetMousePos(), this);
+		graph->addConnection(ImGui::GetMousePos(), { name, node.func->outputType, node.outputName });
 	}
 
 	for (int i = 0; i < node.func->defaultInputParams.size(); i++) {
@@ -104,18 +122,18 @@ void ImGraphNode::draw() {
 		ImGui::SameLine();
 		if (node.inputNames[i] == "") {
 			ImGui::PushItemWidth(FLOAT_INPUT_WIDTH * 2);
-			const char* inputName = (param.type.name + ' ' + to_string(i)).c_str();
+			std::string inputName = param.type.name + ' ' + to_string(i);
 			if (param.type.name == "float") {
-				ImGui::InputFloat(inputName, inputValues[i].data(), 0.1f, 1, "%.2f");
+				ImGui::InputFloat(inputName.c_str(), inputValues[i].data(), 0.1f, 1, "%.2f");
 			} else if (param.type.name == "vec2") {
-				ImGui::InputFloat2(inputName, inputValues[i].data(), "%.2f");
+				ImGui::InputFloat2(inputName.c_str(), inputValues[i].data(), "%.2f");
 			} else if (param.type.name == "vec3") {
-				ImGui::InputFloat3(inputName, inputValues[i].data(), "%.2f");
+				ImGui::InputFloat3(inputName.c_str(), inputValues[i].data(), "%.2f");
 			} else if (param.type.name == "vec4") {
-				ImGui::InputFloat4(inputName, inputValues[i].data(), "%.2f");
+				ImGui::InputFloat4(inputName.c_str(), inputValues[i].data(), "%.2f");
 			} else {
 				ImGui::SameLine(FLOAT_INPUT_WIDTH * 2 + 39);
-				ImGui::Text(inputName);
+				ImGui::Text(inputName.c_str());
 			}
 		} else {
 			ImGui::Text(node.inputNames[i].substr(0, 14).c_str());
@@ -161,8 +179,8 @@ void ShaderConnection::draw() {
 	glBindVertexArray(VAO);
 	glDrawArrays(GL_LINE_STRIP, 0, 2);
 	glBindVertexArray(0);
-	if (beginNode != nullptr) {
-		ImGui::Begin(beginNode->name.c_str());
+	if (beginNode.name != "") {
+		ImGui::Begin(beginNode.name.c_str());
 
 		glm::vec2 newWindowPos(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y);
 		glm::vec2 deltaWindowPos = newWindowPos - oldWindowPosBegin;
@@ -173,8 +191,8 @@ void ShaderConnection::draw() {
 
 		ImGui::End();
 	}
-	if (endNode != nullptr) {
-		ImGui::Begin(endNode->name.c_str());
+	if (endNode.name != "") {
+		ImGui::Begin(endNode.name.c_str());
 
 		glm::vec2 newWindowPos(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y);
 		glm::vec2 deltaWindowPos = newWindowPos - oldWindowPosEnd;
@@ -217,24 +235,26 @@ void ShaderGraph::removeNode(ImGraphNode* node) {
 
 void ShaderGraph::removeConnectionWithBeginNode(ImGraphNode* node) {
 	for (ShaderConnection* con : connections) {
-		if (con->getBeginNode() == node) {
-			ImGraphNode* endNode = con->getEndNode();
-			for (size_t i = 0; i < endNode->node.inputNames.size(); i++) {
+		if (con->getBeginNode()->name == node->name) {
+			std::string endNode = con->getEndNode()->name;
+			// TODO Error: Fix this
+			std::cout << "REMOVE NAMES PROPERLY\n";
+			/*for (size_t i = 0; i < endNode->node.inputNames.size(); i++) {
 				if (endNode->node.inputNames[i] == node->name) {
 					endNode->node.inputNames[i] = "";
 				}
-			}
+			}*/
 		}
 	}
 
 	connections.erase(remove_if(begin(connections), end(connections), [node](ShaderConnection* u) {
-		return u->getBeginNode() == node;
+		return u->getBeginNode()->name == node->name;
 		}), end(connections));
 }
 
 void ShaderGraph::removeConnectionWithEndNode(ImGraphNode* node, int i) {
 	connections.erase(remove_if(begin(connections), end(connections), [node, i](ShaderConnection* u) {
-		return u->getEndNode() == node && (i < 0 || u->getBeginNode()->name == node->node.inputNames[i]);
+		return u->getEndNode()->name == node->name && (i < 0 || u->getBeginNode()->name == node->node.inputNames[i]);
 		}), end(connections));
 }
 
@@ -288,7 +308,7 @@ void ShaderGraph::draw() {
 	}
 }
 
-void ShaderGraph::addConnection(ImVec2 startPos, ImGraphNode* begin) {
+void ShaderGraph::addConnection(ImVec2 startPos, ConnectionPoint begin) {
 	connections.push_back(new ShaderConnection{ lineShader, { startPos.x, startPos.y, startPos.x, startPos.y }, begin });
 	selectedConnection = connections.back();
 }
