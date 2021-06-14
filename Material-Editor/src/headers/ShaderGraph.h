@@ -27,6 +27,7 @@ public:
 	std::string name;
 	std::vector<FuncParameter> inputParams;
 	std::vector<FuncParameter> outputParams;
+	std::vector<std::string> inputNames;
 };
 
 class ImBeginNode : public ImSpecialNode {
@@ -38,6 +39,7 @@ public:
 			{ "vec3", None, "vNormal" },
 			{ "mat4", None, "mvp" } 
 		};
+		inputNames.resize(inputParams.size());
 	}
 };
 
@@ -53,6 +55,7 @@ public:
 			{"vec2", None, "fTexCoord"},
 			{"vec3", None, "fNormal"}
 		};
+		inputNames.resize(inputParams.size());
 	}
 };
 
@@ -62,6 +65,7 @@ public:
 		inputParams = {
 			{"vec3", None, "FragColor"}
 		};
+		inputNames.resize(inputParams.size());
 	}
 };
 
@@ -143,16 +147,29 @@ public:
 	void removeNode(ImGraphNode* node);
 	void removeConnectionWithBeginNode(ImGraphNode* node);
 	void removeConnectionWithEndNode(ImGraphNode* node, int i = -1);
+	void removeConnectionWithEndNode(ImSpecialNode* node, int i = -1);
 	void addNode(GraphNode node);
 	void addConnection(ImVec2 startPos, ConnectionPoint beginNode);
 	void draw();
+	void drawGenerated();
 
 private:
 	Shader* lineShader;
+	Shader generatedShader;
+	bool hasGeneratedShader;
 	bool firstDraw = true;
+	float time = 0;
 
 	std::vector<ImGraphNode*> nodes;
 	std::vector<ShaderConnection*> connections;
 	std::vector<ImSpecialNode*> specialNodes;
+
+	uint32_t VAO = createTestVAO();
+
+	glm::mat4 proj = glm::perspective(glm::radians(45.0f), (WIDTH + 0.0f) / HEIGHT, 0.1f, 1000.0f);
+	glm::mat4 view = glm::lookAt({ 0.5, 0.5, 5 }, { 0.5, 0.5, 0.5 }, glm::vec3(0.0f, 1.0f, 0.0f));
+	uint32_t texture = loadTexture("textures/brick_wall.jpg", GL_RGB, true);
+
+	void generateShader();
 };
 

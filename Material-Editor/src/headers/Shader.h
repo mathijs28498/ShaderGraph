@@ -16,6 +16,7 @@ class Shader {
 public:
 	uint32_t ID;
 
+	Shader() {};
 	Shader(std::vector<GraphNode> vertexNodes, std::vector<GraphNode> fragmentNodes);
 	Shader(const char* vertexPath, const char* fragmentPath);
 	Shader(const char* vertexPath, const char* geometryPath, const char* fragmentPath);

@@ -101,8 +101,20 @@ ShaderFunction addVec2{
 vec2 addVec2(vec2 a, vec2 b) {\n\
 	return a + b;\n\
 }\n",
-	{{"vec2", None, "vec2(0, 0)"}, {"vec2", None, "vec2(0, 0)"}},
+	{{"vec2", None, "vec2(0)"}, {"vec2", None, "vec2(0)"}},
 	{"vec2", None}
+};
+
+ShaderFunction addVec3{
+	"addVec3",
+	{},
+	"vec3 addVec3(vec3 a, vec3 b);\n",
+"\
+vec3 addVec3(vec3 a, vec3 b) {\n\
+	return a + b;\n\
+}\n",
+	{{"vec3", None, "vec3(0)"}, {"vec3", None, "vec3(0)"}},
+	{"vec3", None}
 };
 
 ShaderFunction sinShad{
@@ -195,6 +207,7 @@ map<string, ShaderFunction*> shaderFunctions{
 	{divVec2Float.name, &divVec2Float},
 	{multVec2Float.name, &multVec2Float},
 	{addVec2.name, &addVec2},
+	{addVec3.name, &addVec3},
 	{multFloat.name, &multFloat},
 	{sinShad.name, &sinShad},
 	{cosShad.name, &cosShad},

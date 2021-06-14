@@ -28,16 +28,17 @@ void ImSpecialNode::onInputButton(FuncParameter param, int i) {
 	ShaderConnection* con = graph->selectedConnection;
 	// TODO ERROR: Fix this
 	if (con != nullptr && con->getBeginNode()->param.type.name == param.type.name) {
-		/*if (node.inputNames[i] != "")
+
+		if (inputNames[i] != "")
 			graph->removeConnectionWithEndNode(this, i);
 
 		con->setEndNode({ name, param });
-		node.inputNames[i] = con->getBeginNode()->name;
+		inputNames[i] = con->getBeginNode()->name;
 		graph->selectedConnection = nullptr;
-		graph->selectedConnectionPress = false;*/
+		graph->selectedConnectionPress = false;
 	} else if (con == nullptr) {
-		/*graph->removeConnectionWithEndNode(this, i);
-		node.inputNames[i] = "";*/
+		graph->removeConnectionWithEndNode(this, i);
+		inputNames[i] = "";
 	}
 }
 
@@ -55,9 +56,10 @@ void ImSpecialNode::draw() {
 		}
 		ImGui::NewLine();
 	}
-	for (FuncParameter input : inputParams) {
-		if (ImGui::ArrowButton(input.value.c_str(), ImGuiDir_Left)) {
-
+	for (size_t i = 0; i < inputParams.size(); i++) {
+		FuncParameter input = inputParams[i];
+		if (ImGui::ArrowButton((input.value + std::to_string(i)).c_str(), ImGuiDir_Left)) {
+			onInputButton(input, i);
 		}
 		ImGui::SameLine(); ImGui::Text(input.type.name.c_str());
 		ImGui::SameLine(); ImGui::Text(input.value.c_str());
@@ -108,7 +110,6 @@ void ImGraphNode::draw() {
 	ImGui::SameLine(START_WINDOW_WIDTH - nextItemWidth); ImGui::Text((node.func->outputType.name).c_str());
 	ImGui::SameLine();
 	if (ImGui::ArrowButton("output", ImGuiDir_Right)) {
-		// TODO: Change this
 		graph->addConnection(ImGui::GetMousePos(), { name, node.func->outputType, node.outputName });
 	}
 
@@ -258,7 +259,13 @@ void ShaderGraph::removeConnectionWithEndNode(ImGraphNode* node, int i) {
 		}), end(connections));
 }
 
+void ShaderGraph::removeConnectionWithEndNode(ImSpecialNode* node, int i) {
+	connections.erase(remove_if(begin(connections), end(connections), [node, i](ShaderConnection* u) {
+		return u->getEndNode()->name == node->name && (i < 0 || u->getBeginNode()->name == node->inputNames[i]);
+		}), end(connections));
+}
 
+std::string temp = "vec2(0, 0)";
 
 void ShaderGraph::draw() {
 	if (firstDraw) {
@@ -274,13 +281,14 @@ void ShaderGraph::draw() {
 	ImGui::SetWindowSize({ 150, HEIGHT / 2 - 50 });
 	ImGui::SetWindowPos({ 0, 0 });
 	if (ImGui::Button("GENERATE")) {
-		//TODO: Make logic to generate code
+		generateShader();
 	}
 	ImGui::NewLine();
 	for (auto funcPair : shaderFunctions) {
 		ShaderFunction* func = funcPair.second;
 		if (ImGui::Button(func->name.c_str())) {
 			addNode({ func->name, getUniqueName(), None });
+			temp = "noiseInputX";
 		}
 	}
 	ImGui::End();
@@ -308,7 +316,78 @@ void ShaderGraph::draw() {
 	}
 }
 
+void ShaderGraph::drawGenerated() {
+	if (generatedShader.ID == 0)
+		return;
+
+	float deltaTime = 1 / ImGui::GetIO().Framerate;
+	time += deltaTime;
+
+	// TODO: Make this into a function to use in shaderGraph
+	generatedShader.use();
+	generatedShader.setMat4("model", glm::mat4(1.0f));
+	generatedShader.setMat4("view", view);
+	generatedShader.setMat4("proj", proj);
+	generatedShader.setFloat("time", time);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
+
+	glBindVertexArray(VAO);
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (void*)0);
+	glBindVertexArray(0);
+}
+
 void ShaderGraph::addConnection(ImVec2 startPos, ConnectionPoint begin) {
 	connections.push_back(new ShaderConnection{ lineShader, { startPos.x, startPos.y, startPos.x, startPos.y }, begin });
 	selectedConnection = connections.back();
+}
+
+void ShaderGraph::generateShader() {
+	std::vector<GraphNode> vertexNodes{
+			{"vec2", "noiseInputX", None},
+			{"multFloat", "vec2InputY", None},
+			{"vec2", "noiseInputY", None},
+			{"noise", "noiseX", None},
+			{"noise", "noiseY", None},
+			{"time", "time", None}
+	};
+	{
+		vertexNodes[0].inputNames[0] = "time";
+
+		vertexNodes[1].inputNames[0] = "time";
+		vertexNodes[1].inputNames[1] = "2";
+
+		vertexNodes[2].inputNames[0] = "vec2InputY";
+		/*vertexNodes[3].inputNames[0] = "vec2(0,0)";
+		vertexNodes[4].inputNames[0] = "vec2(0,0)";*/
+
+		vertexNodes[3].inputNames[0] = temp;
+		vertexNodes[4].inputNames[0] = "noiseInputY";
+	}
+
+	std::vector<GraphNode> fragmentNodes{
+		{"vec2", "timeV2", None},
+		{"divVec2Float", "timeV2_2", None},
+		{"addVec2", "newCoord", None},
+		{"multVec2Float", "noiseInput", None},
+		{"noise", "noiseHeight", None},
+		{"time", "time", None}
+	};
+	{
+		fragmentNodes[0].inputNames[0] = "time";
+
+		fragmentNodes[1].inputNames[0] = "timeV2";
+		fragmentNodes[1].inputNames[1] = "10";
+
+		fragmentNodes[2].inputNames[0] = "fTexCoord";
+		fragmentNodes[2].inputNames[1] = "timeV2_2";
+
+		fragmentNodes[3].inputNames[0] = "newCoord";
+		fragmentNodes[3].inputNames[1] = "10";
+
+		fragmentNodes[4].inputNames[0] = "noiseInput";
+	}
+
+	generatedShader = Shader(vertexNodes, fragmentNodes);
+
 }
