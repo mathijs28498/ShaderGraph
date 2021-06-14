@@ -44,13 +44,13 @@ void ImSpecialNode::onInputButton(FuncParameter param, int i) {
 
 void ImSpecialNode::draw() {
 	ImGui::StyleColorsClassic();
-	ImGui::Begin(name.c_str(), (bool*) 0, ImGuiWindowFlags_NoCollapse);
-	ImGui::SetWindowSize({ START_WINDOW_WIDTH, 0 }); 
+	ImGui::Begin(name.c_str(), (bool*)0, ImGuiWindowFlags_NoCollapse);
+	ImGui::SetWindowSize({ START_WINDOW_WIDTH, 0 });
 	for (FuncParameter output : outputParams) {
 		int letterAmount = output.value.size() + output.type.name.size() + 1;
 		ImGui::SameLine(START_WINDOW_WIDTH - letterAmount * 7 - 35); ImGui::Text(output.value.c_str());
 		ImGui::SameLine(); ImGui::Text(output.type.name.c_str());
-		ImGui::SameLine(); 
+		ImGui::SameLine();
 		if (ImGui::ArrowButton(output.value.c_str(), ImGuiDir_Right)) {
 			graph->addConnection(ImGui::GetMousePos(), { name, output });
 		}
@@ -105,7 +105,7 @@ void ImGraphNode::draw() {
 
 	float windowWidth = START_WINDOW_WIDTH;
 	ImGui::Text(node.func->name.c_str());
-	
+
 	int nextItemWidth = node.func->outputType.name == "sampler2D" ? 100 : 65;
 	ImGui::SameLine(START_WINDOW_WIDTH - nextItemWidth); ImGui::Text((node.func->outputType.name).c_str());
 	ImGui::SameLine();
@@ -265,8 +265,6 @@ void ShaderGraph::removeConnectionWithEndNode(ImSpecialNode* node, int i) {
 		}), end(connections));
 }
 
-std::string temp = "vec2(0, 0)";
-
 void ShaderGraph::draw() {
 	if (firstDraw) {
 		specialNodes = {
@@ -288,7 +286,6 @@ void ShaderGraph::draw() {
 		ShaderFunction* func = funcPair.second;
 		if (ImGui::Button(func->name.c_str())) {
 			addNode({ func->name, getUniqueName(), None });
-			temp = "noiseInputX";
 		}
 	}
 	ImGui::End();
@@ -344,50 +341,36 @@ void ShaderGraph::addConnection(ImVec2 startPos, ConnectionPoint begin) {
 
 void ShaderGraph::generateShader() {
 	std::vector<GraphNode> vertexNodes{
-			{"vec2", "noiseInputX", None},
-			{"multFloat", "vec2InputY", None},
-			{"vec2", "noiseInputY", None},
-			{"noise", "noiseX", None},
-			{"noise", "noiseY", None},
-			{"time", "time", None}
+		{"multMat4Vec3", "A", None},
 	};
 	{
-		vertexNodes[0].inputNames[0] = "time";
-
-		vertexNodes[1].inputNames[0] = "time";
-		vertexNodes[1].inputNames[1] = "2";
-
-		vertexNodes[2].inputNames[0] = "vec2InputY";
-		/*vertexNodes[3].inputNames[0] = "vec2(0,0)";
-		vertexNodes[4].inputNames[0] = "vec2(0,0)";*/
-
-		vertexNodes[3].inputNames[0] = temp;
-		vertexNodes[4].inputNames[0] = "noiseInputY";
+		vertexNodes[0].inputNames[0] = "mvp";
+		vertexNodes[0].inputNames[1] = "vPosition";
 	}
 
 	std::vector<GraphNode> fragmentNodes{
-		{"vec2", "timeV2", None},
-		{"divVec2Float", "timeV2_2", None},
-		{"addVec2", "newCoord", None},
-		{"multVec2Float", "noiseInput", None},
-		{"noise", "noiseHeight", None},
-		{"time", "time", None}
+		{"texture0", "B", None},
+		{"texture", "C", None},
 	};
 	{
-		fragmentNodes[0].inputNames[0] = "time";
-
-		fragmentNodes[1].inputNames[0] = "timeV2";
-		fragmentNodes[1].inputNames[1] = "10";
-
-		fragmentNodes[2].inputNames[0] = "fTexCoord";
-		fragmentNodes[2].inputNames[1] = "timeV2_2";
-
-		fragmentNodes[3].inputNames[0] = "newCoord";
-		fragmentNodes[3].inputNames[1] = "10";
-
-		fragmentNodes[4].inputNames[0] = "noiseInput";
+		fragmentNodes[1].inputNames[0] = "texture0";
+		fragmentNodes[1].inputNames[1] = "fTexCoord";
 	}
 
-	generatedShader = Shader(vertexNodes, fragmentNodes);
+
+
+	std::vector<SpecialShaderNode> specialShaderNodes;
+	for (size_t i = 1; i < specialNodes.size(); i++) {
+		ImSpecialNode* node = specialNodes[i];
+		specialShaderNodes.push_back({ node->inputParams, node->inputNames });
+	}
+
+	specialShaderNodes[0].inputNames[0] = "A";
+	specialShaderNodes[0].inputNames[1] = "vTexCoord";
+	specialShaderNodes[0].inputNames[2] = "vNormal";
+
+	specialShaderNodes[1].inputNames[0] = "C";
+
+	generatedShader = Shader(vertexNodes, fragmentNodes, specialShaderNodes);
 
 }

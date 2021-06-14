@@ -3,7 +3,7 @@
 
 #include <map>
 
-std::string generateVertexCode(std::vector<GraphNode> nodes) {
+std::string generateVertexCode(std::vector<GraphNode> nodes, SpecialShaderNode* specialNode) {
 	std::string start =
 		"#version 330 core\n"
 		"layout(location = 0) in vec3 vPosition;\n"
@@ -31,25 +31,23 @@ std::string generateVertexCode(std::vector<GraphNode> nodes) {
 	for (GraphNode node : nodes) {
 		node.appendNode(&start, &declarations, &main, &implementations, GL_VERTEX_SHADER);
 	}
-	main +=
-		"	gl_Position = proj * view * model * vec4(vPosition.x + noiseX, vPosition.y + noiseY, vPosition.z, 1.0);\n"
-		"	fTexCoord = vTexCoord;\n"
-		"	fNormal = vNormal;\n"
-		"}\n";
+	for (size_t i = 0; i < specialNode->inputParams.size(); i++) {
+		if (specialNode->inputNames[i] != "") {
+			main += specialNode->inputParams[i].value + " = " + specialNode->inputNames[i] + ";\n";
+		}
+	}
+	main += "}\n";
 
 	return start + declarations + main + implementations;
 }
 
-std::string generateFragmentCode(std::vector<GraphNode> nodes) {
+std::string generateFragmentCode(std::vector<GraphNode> nodes, SpecialShaderNode* specialNode) {
 	std::string start =
 		"#version 330 core\n"
 		"in vec2 fTexCoord;\n"
 		"in vec3 fNormal;\n"
 		"\n"
-		"out vec4 FragColor;\n"
-		"\n"
-		"uniform sampler2D texture0;\n"
-		"\n";
+		"out vec4 FragColor;\n";
 
 	std::string declarations =
 		"\n";
@@ -63,17 +61,21 @@ std::string generateFragmentCode(std::vector<GraphNode> nodes) {
 		node.appendNode(&start, &declarations, &main, &implementations, GL_FRAGMENT_SHADER);
 	}
 
-	main += 
-		"FragColor = texture(texture0, fTexCoord) * vec4(noiseHeight, 0, 1 - noiseHeight, 1);\n"
-		"}\n";
+	for (size_t i = 0; i < specialNode->inputParams.size(); i++) {
+		if (specialNode->inputNames[i] != "") {
+			main += specialNode->inputParams[i].value + " = " + specialNode->inputNames[i] + ";\n";
+		}
+	}
+	main += "}\n";
 	
 
 	return start + declarations + main + implementations;
 }
 
-Shader::Shader(std::vector<GraphNode> vertexNodes, std::vector<GraphNode> fragmentNodes) {
-	std::string vertexCode = generateVertexCode(vertexNodes);
-	std::string fragmentCode = generateFragmentCode(fragmentNodes);
+Shader::Shader(std::vector<GraphNode> vertexNodes, std::vector<GraphNode> fragmentNodes, std::vector<SpecialShaderNode> specialNodes) {
+	resetShaderFunctionSets();
+	std::string vertexCode = generateVertexCode(vertexNodes, &specialNodes[0]);
+	std::string fragmentCode = generateFragmentCode(fragmentNodes, &specialNodes[1]);
 
 	//std::cout << vertexCode << '\n';
 	//std::cout << fragmentCode << '\n';

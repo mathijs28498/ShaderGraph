@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ShaderFunctions.h"
+//#include "ShaderGraph.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -12,12 +13,17 @@
 #include <sstream>
 #include <iostream>
 
+struct SpecialShaderNode {
+	std::vector<FuncParameter> inputParams;
+	std::vector<std::string> inputNames;
+};
+
 class Shader {
 public:
 	uint32_t ID;
 
 	Shader() {};
-	Shader(std::vector<GraphNode> vertexNodes, std::vector<GraphNode> fragmentNodes);
+	Shader(std::vector<GraphNode> vertexNodes, std::vector<GraphNode> fragmentNodes, std::vector<SpecialShaderNode> specialNodes);
 	Shader(const char* vertexPath, const char* fragmentPath);
 	Shader(const char* vertexPath, const char* geometryPath, const char* fragmentPath);
 	void use();

@@ -9,6 +9,7 @@
 
 using namespace std;
 
+void resetShaderFunctionSets();
 
 enum PrefixType {
 	None,
@@ -27,7 +28,6 @@ struct FuncParameter {
 	string value;
 };
 
-// TODO: Make sure that start doesn't have overlapping elements
 struct ShaderFunction {
 	string name;
 	vector<string> uniforms;

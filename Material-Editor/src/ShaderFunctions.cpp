@@ -1,6 +1,8 @@
 #include "headers/ShaderFunctions.h"
 
 #include <unordered_set>
+#include <iostream>
+#include <stdexcept>
 
 ShaderFunction vec2{
 	"vec2",
@@ -51,13 +53,22 @@ ShaderFunction vec4{
 	{{"float", None, "0"}, {"float", None, "0"}, {"float", None, "0"}, {"float", None, "0"}},
 	{"vec4", None}
 };
-ShaderFunction texture{
-	"texture",
+
+ShaderFunction multMat4Vec4{
+	"multMat4Vec4",
 	{},
+	"vec4 multMat4Vec4(mat4 mat, vec4 vec) {return mat * vec;};\n",
 	"",
+	{{"mat4", None, "Mat4(0)"}, {"vec4", None, "vec4(0)"}},
+	{"vec4", None}
+};
+ShaderFunction multMat4Vec3{
+	"multMat4Vec3",
+	{},
+	"vec4 multMat4Vec3(mat4 mat, vec3 vec) {return mat * vec4(vec.xyz, 1);};\n",
 	"",
-	{{"sampler2D", None, ""}, {"vec2", None, ""}},
-	{"vec3", None }
+	{{"mat4", None, "Mat4(0)"}, {"vec3", None, "vec4(0)"}},
+	{"vec4", None}
 };
 
 ShaderFunction multFloat{
@@ -134,13 +145,21 @@ ShaderFunction cosShad{
 	{"float", None }
 };
 
-ShaderFunction time{
+ShaderFunction timeShad{
 	"time",
 	{"uniform float time;"},
 	"",
 	"",
 	{},
 	{"float", Undefined}
+};
+ShaderFunction texture{
+	"texture",
+	{},
+	"",
+	"",
+	{{"sampler2D", None, ""}, {"vec2", None, ""}},
+	{"vec4", None }
 };
 ShaderFunction texture0{
 	"texture0",
@@ -202,7 +221,7 @@ float noise(vec2 P) {\n\
 map<string, ShaderFunction*> shaderFunctions{
 	{texture.name, &texture},
 	{texture0.name, &texture0},
-	{time.name, &time},
+	{timeShad.name, &timeShad},
 	{noise.name, &noise},
 	{divVec2Float.name, &divVec2Float},
 	{multVec2Float.name, &multVec2Float},
@@ -211,6 +230,8 @@ map<string, ShaderFunction*> shaderFunctions{
 	{multFloat.name, &multFloat},
 	{sinShad.name, &sinShad},
 	{cosShad.name, &cosShad},
+	{multMat4Vec4.name, &multMat4Vec4},
+	{multMat4Vec3.name, &multMat4Vec3},
 	{vec4.name, &vec4},
 	{vec3.name, &vec3},
 	{vec3x.name, &vec3x},
@@ -222,6 +243,11 @@ map<string, ShaderFunction*> shaderFunctions{
 
 unordered_set<string> includedFunctions;
 unordered_set<string> includedUniforms;
+
+void resetShaderFunctionSets() {
+	includedFunctions = {};
+	includedUniforms = {};
+}
 
 // TODO: Extend to Geometry/Tesselation shader
 string getPrefix(PrefixType prefixType, GLuint shaderType) {
@@ -246,6 +272,9 @@ string getParam(string* name, FuncParameter* param, GLuint shaderType) {
 }
 
 GraphNode::GraphNode(string functionName, string outputName, PrefixType outputPrefix) : func(shaderFunctions[functionName]) {
+	if (func == nullptr) {
+		throw std::runtime_error("Failed to initialize GraphNode, func == nullptr\n");
+	}
 	inputNames.resize(func->defaultInputParams.size());
 	this->outputName = outputName;
 	this->outputPrefix = outputPrefix;

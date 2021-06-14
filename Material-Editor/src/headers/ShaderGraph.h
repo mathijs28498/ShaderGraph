@@ -63,7 +63,7 @@ class ImEndNode : public ImSpecialNode {
 public:
 	ImEndNode(ShaderGraph* graph) : ImSpecialNode("End", { WIDTH - 210, HEIGHT / 2 }, graph) {
 		inputParams = {
-			{"vec3", None, "FragColor"}
+			{"vec4", None, "FragColor"}
 		};
 		inputNames.resize(inputParams.size());
 	}
