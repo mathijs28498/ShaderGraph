@@ -2,6 +2,7 @@
 #include "headers/ShaderFunctions.h"
 
 #include <GLFW/glfw3.h>
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtx/norm.hpp>
 
