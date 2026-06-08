@@ -325,7 +325,7 @@ void ShaderGraph::drawGenerated() {
 		return;
 
 	float deltaTime = 1 / ImGui::GetIO().Framerate;
-	time += deltaTime;
+	time += deltaTime * 0.2;
 
 	// TODO: Make this into a function to use in shaderGraph
 	generatedShader.use();
