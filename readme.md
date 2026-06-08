@@ -29,7 +29,7 @@ You will need the following dependencies:
 * [GLM](https://github.com/g-truc/glm)
 * [GLAD](https://glad.dav1d.de/)
 * [stb_image.h](https://github.com/nothings/stb/blob/master/stb_image.h)
-* *Note: [Dear ImGui](https://github.com/ocornut/imgui) source files are already included directly in the `src/vendor` folder.*
+* [Dear ImGui](https://github.com/ocornut/imgui) *(Note:  source files are already included directly in the `src/vendor` folder.)*
 
 ### Setup & Build
 1. Clone the repository:
